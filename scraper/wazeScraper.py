@@ -14,7 +14,11 @@ def close_popup(drv, wt):
     try:
         close_button = wt.until(EC.element_to_be_clickable((By.CLASS_NAME, "waze-tour-tooltip__acknowledge")))
         ActionChains(drv).move_to_element(close_button).click().perform()
-        print("\033[92mPopup cerrado dinámicamente con movimiento.\033[0m")
+        print("\033[92mPopup 'Entendido' cerrado.\033[0m")
+
+        close_button = wt.until(EC.element_to_be_clickable((By.CLASS_NAME, "wz-downloadbar__close-button")))
+        ActionChains(drv).move_to_element(close_button).click().perform()
+        print("\033[92mPopup 'Download' cerrado.\033[0m")
     except:
         print("No apareció el popup.")
 
@@ -23,52 +27,80 @@ def double_zoom(drv):
     map_area = drv.find_element(By.CLASS_NAME, "wm-map")
     click_action = ActionChains(drv).move_to_element(map_area)
     click_action.double_click().perform()
-    time.sleep(1)
+    time.sleep(0.5)
     click_action.double_click().perform()
-    print("\033[94mDoble zoom.\033[0m")
+    time.sleep(0.5)
+    click_action.double_click().perform()
+    print("\033[94mTriple zoom.\033[0m")
 
 
 #Buscar las distintas alertas
 def search_alerts(drv):
-    alert_popups = drv.find_element(By.CLASS_NAME, "leaflet-pane") #"wm-alert-details")
+    alert_popups = drv.find_element(By.CLASS_NAME, "leaflet-map-pane") #"wm-alert-details")
 
     # Encuentra todos los divs dentro del contenedor
     divs = alert_popups.find_elements(By.TAG_NAME, "div")
-    print(f"\033[93mSe encontraron {len(divs)} marcadores para clickear.\033[0m")
+    filtered_divs = [d for d in divs if "wm-alert-icon" in d.get_attribute("class")]
 
     # Clickear cada uno
-    actions = ActionChains(driver)
-    for i, div in enumerate(divs, 1):
+    actions = ActionChains(drv)
+    for i, div in enumerate(filtered_divs, 1):
         try:
             actions.move_to_element(div).click().perform()
-            print(f"✅ Click en el marcador #{i}")
+            element = drv.find_element(By.CLASS_NAME, "wm-alert-details")
+            print(
+            drv.find_element(By.CLASS_NAME, "wm-alert-details__title").text,
+            drv.find_element(By.CLASS_NAME, "wm-alert-details__address").text,
+            drv.find_element(By.CLASS_NAME, "wm-alert-details__description").text,
+            drv.find_element(By.CLASS_NAME, "wm-alert-details__reporter-name").text,
+            drv.find_element(By.CLASS_NAME, "wm-alert-details__time").text
+            )
+            #time.sleep(1)
+            #actions.move_to_element(element.find_element(By.CLASS_NAME,"leaflet-popup-close-button")).click().perform()
             time.sleep(0.5)  # espera entre clics para no sobrecargar
-        except Exception as e:
-            print(f"⚠️ No se pudo clickear el marcador #{i}: {e}")
+        except:
+            pass
 
-# Moverse en circulos por la RM
-def move_in_circle(drv):
-    # Encontrar el canvas del mapa o contenedor
+def drag_map(drv, direction="v", forward=True):
     map_area = drv.find_element(By.CLASS_NAME, "wm-map")
+    action = ActionChains(drv)
+    offset_x = (map_area.size["width"]//2)-10
+    offset_y = (map_area.size["height"]//2)-10
 
-    actions = ActionChains(drv)
+    dx, dy, initial_x, initial_y = 0, 0, 0, 0
+    if direction == "v":
+        dy = offset_y if forward else -offset_y
+        initial_y = -offset_y if forward else offset_y
+    elif direction == "h":
+        dx = offset_x if forward else -offset_x
+        initial_x = -offset_x if forward else offset_x
+    
+    try:
+        action.move_to_element_with_offset(map_area,initial_x,initial_y) \
+            .click_and_hold() \
+            .pause(1) \
+            .move_by_offset(dx, dy) \
+            .pause(1) \
+            .move_by_offset(dx, dy) \
+            .release().perform()
+        time.sleep(0.5)
+    except Exception as e:
+        print(f"Error al mover de ({initial_x}, {initial_y}) a ({dx}, {dy}): {e}")
 
-    center_x = 0
-    center_y = 0
-    radius = 100  # en píxeles
-    steps = 20    # número de puntos en la circunferencia
+def move_and_search(drv):
+    for i in range(30):
+        search_alerts(drv)
+        time.sleep(2)
+        drag_map(drv,"v",True)
 
-    # Recolectar elementos múltiples veces
-    for i in range(steps):
-        angle = 2 * math.pi * (i / steps)
-        dx = int(radius * math.cos(angle))
-        dy = int(radius * math.sin(angle))
-
-        actions.move_to_element(map_area).click_and_hold().move_by_offset(dx, dy).release().perform()
-        print(f"Movido a offset ({dx}, {dy})")
-        time.sleep(2) 
-
-
+def remove_elements_by_class(drv, class_name):
+    script = f"""
+    var elements = document.getElementsByClassName("{class_name}");
+    while(elements.length > 0) {{
+        elements[0].parentNode.removeChild(elements[0]);
+    }}
+    """
+    drv.execute_script(script)
 
 #----------------------------------- Main
 # Iniciar navegador
@@ -80,22 +112,26 @@ driver = webdriver.Chrome(options=chrome_options)
 
 try:
     driver.get("https://www.waze.com/es-419/live-map/")
-    time.sleep(5)  # Espera inicial para que cargue el contenido básico
+    time.sleep(3)  # Espera inicial para que cargue el contenido básico
 
-    wait = WebDriverWait(driver, 5) # Espera al popup inicial
+    wait = WebDriverWait(driver, 2) # Espera al popup inicial
 
     # Funcion creada arriba
     close_popup(driver, wait)
 
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, "wz-livemap")))
+    remove_elements_by_class(driver,"notification-portal")
+    remove_elements_by_class(driver,"wz-header")
+    remove_elements_by_class(driver,"wm-cards")
+    remove_elements_by_class(driver,"leaflet-control-container")
 
     # Acá se ejecutan distintas acciones, ver funciones arriba
     # Hace zoom
-    time.sleep(2)
+    time.sleep(1)
     double_zoom(driver)
 
-    time.sleep(2)
-    search_alerts(driver)
+    time.sleep(1)
+    move_and_search(driver)
 
 finally:
     driver.quit()
