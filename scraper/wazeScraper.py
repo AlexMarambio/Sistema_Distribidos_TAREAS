@@ -34,32 +34,40 @@ def double_zoom(drv):
     print("\033[94mTriple zoom.\033[0m")
 
 
-#Buscar las distintas alertas
 def search_alerts(drv):
-    alert_popups = drv.find_element(By.CLASS_NAME, "leaflet-map-pane") #"wm-alert-details")
-
-    # Encuentra todos los divs dentro del contenedor
+    alert_popups = drv.find_element(By.CLASS_NAME, "leaflet-map-pane")
     divs = alert_popups.find_elements(By.TAG_NAME, "div")
     filtered_divs = [d for d in divs if "wm-alert-icon" in d.get_attribute("class")]
+    divs_to_review = len(filtered_divs)
 
-    # Clickear cada uno
-    actions = ActionChains(drv)
-    for i, div in enumerate(filtered_divs, 1):
+    for i in range(divs_to_review):
         try:
+            actions = ActionChains(drv)
+            # Refrescar divs
+            alert_popups = drv.find_element(By.CLASS_NAME, "leaflet-map-pane")
+            divs = alert_popups.find_elements(By.TAG_NAME, "div")
+            filtered_divs = [d for d in divs if "wm-alert-icon" in d.get_attribute("class")]
+
+            div = filtered_divs[i]
             actions.move_to_element(div).click().perform()
-            element = drv.find_element(By.CLASS_NAME, "wm-alert-details")
+
+            time.sleep(2)
+
             print(
-            drv.find_element(By.CLASS_NAME, "wm-alert-details__title").text,
-            drv.find_element(By.CLASS_NAME, "wm-alert-details__address").text,
-            drv.find_element(By.CLASS_NAME, "wm-alert-details__description").text,
-            drv.find_element(By.CLASS_NAME, "wm-alert-details__reporter-name").text,
-            drv.find_element(By.CLASS_NAME, "wm-alert-details__time").text
+                drv.find_element(By.CLASS_NAME, "wm-alert-details__title").text,
+                drv.find_element(By.CLASS_NAME, "wm-alert-details__address").text,
+                drv.find_element(By.CLASS_NAME, "wm-alert-details__description").text,
+                drv.find_element(By.CLASS_NAME, "wm-alert-details__reporter-name").text,
+                drv.find_element(By.CLASS_NAME, "wm-alert-details__time").text
             )
-            #time.sleep(1)
-            #actions.move_to_element(element.find_element(By.CLASS_NAME,"leaflet-popup-close-button")).click().perform()
-            time.sleep(0.5)  # espera entre clics para no sobrecargar
-        except:
+
+            time.sleep(0.5)
+            actions.move_to_element(drv.find_element(By.CLASS_NAME,"leaflet-popup-close-button")).click().perform()
+            time.sleep(0.5)
+
+        except Exception as e:
             pass
+
 
 def drag_map(drv, direction="v", forward=True):
     map_area = drv.find_element(By.CLASS_NAME, "wm-map")
@@ -88,10 +96,18 @@ def drag_map(drv, direction="v", forward=True):
         print(f"Error al mover de ({initial_x}, {initial_y}) a ({dx}, {dy}): {e}")
 
 def move_and_search(drv):
-    for i in range(30):
+    for i in range(2):
         search_alerts(drv)
-        time.sleep(2)
+        time.sleep(1)
         drag_map(drv,"v",True)
+        drag_map(drv,"v",True)
+        drag_map(drv,"v",True)
+    for i in range(2):
+        search_alerts(drv)
+        time.sleep(1)
+        drag_map(drv,"h",False)
+        drag_map(drv,"h",False)
+        drag_map(drv,"h",False)
 
 def remove_elements_by_class(drv, class_name):
     script = f"""
