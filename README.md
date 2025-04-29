@@ -7,3 +7,4 @@ Dentro de la carpeta `scraper`, correr el scraper automáticamente mediante el c
 ```
 ./run-waze-scraper.sh
 ```
+Debiese tardar un poco.
