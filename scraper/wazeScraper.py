@@ -133,7 +133,7 @@ try:
     remove_elements_by_class(driver,"leaflet-control-container")
     time.sleep(2)
 
-    collect_alerts(driver,700)
+    collect_alerts(driver,10000)
 
 finally:
     driver.quit()
