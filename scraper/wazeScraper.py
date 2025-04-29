@@ -1,15 +1,14 @@
-from selenium import webdriver
+from seleniumwire import webdriver  
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
+import json
 import time
-import math
 
 #----------------------------------- Funcs
 
-# Cierra el pop up que dice entendido
 def close_popup(drv, wt):
     try:
         close_button = wt.until(EC.element_to_be_clickable((By.CLASS_NAME, "waze-tour-tooltip__acknowledge")))
@@ -21,53 +20,6 @@ def close_popup(drv, wt):
         print("\033[92mPopup 'Download' cerrado.\033[0m")
     except:
         print("No apareció el popup.")
-
-# Zoom al mapa
-def double_zoom(drv):
-    map_area = drv.find_element(By.CLASS_NAME, "wm-map")
-    click_action = ActionChains(drv).move_to_element(map_area)
-    click_action.double_click().perform()
-    time.sleep(0.5)
-    click_action.double_click().perform()
-    time.sleep(0.5)
-    click_action.double_click().perform()
-    print("\033[94mTriple zoom.\033[0m")
-
-
-def search_alerts(drv):
-    alert_popups = drv.find_element(By.CLASS_NAME, "leaflet-map-pane")
-    divs = alert_popups.find_elements(By.TAG_NAME, "div")
-    filtered_divs = [d for d in divs if "wm-alert-icon" in d.get_attribute("class")]
-    divs_to_review = len(filtered_divs)
-
-    for i in range(divs_to_review):
-        try:
-            actions = ActionChains(drv)
-            # Refrescar divs
-            alert_popups = drv.find_element(By.CLASS_NAME, "leaflet-map-pane")
-            divs = alert_popups.find_elements(By.TAG_NAME, "div")
-            filtered_divs = [d for d in divs if "wm-alert-icon" in d.get_attribute("class")]
-
-            div = filtered_divs[i]
-            actions.move_to_element(div).click().perform()
-
-            time.sleep(2)
-
-            print(
-                drv.find_element(By.CLASS_NAME, "wm-alert-details__title").text,
-                drv.find_element(By.CLASS_NAME, "wm-alert-details__address").text,
-                drv.find_element(By.CLASS_NAME, "wm-alert-details__description").text,
-                drv.find_element(By.CLASS_NAME, "wm-alert-details__reporter-name").text,
-                drv.find_element(By.CLASS_NAME, "wm-alert-details__time").text
-            )
-
-            time.sleep(0.5)
-            actions.move_to_element(drv.find_element(By.CLASS_NAME,"leaflet-popup-close-button")).click().perform()
-            time.sleep(0.5)
-
-        except Exception as e:
-            pass
-
 
 def drag_map(drv, direction="v", forward=True):
     map_area = drv.find_element(By.CLASS_NAME, "wm-map")
@@ -84,30 +36,16 @@ def drag_map(drv, direction="v", forward=True):
         initial_x = -offset_x if forward else offset_x
     
     try:
-        action.move_to_element_with_offset(map_area,initial_x,initial_y) \
+        action.move_to_element_with_offset(map_area, initial_x, initial_y) \
             .click_and_hold() \
             .pause(1) \
             .move_by_offset(dx, dy) \
             .pause(1) \
             .move_by_offset(dx, dy) \
             .release().perform()
-        time.sleep(0.5)
+        time.sleep(1)
     except Exception as e:
         print(f"Error al mover de ({initial_x}, {initial_y}) a ({dx}, {dy}): {e}")
-
-def move_and_search(drv):
-    for i in range(2):
-        search_alerts(drv)
-        time.sleep(1)
-        drag_map(drv,"v",True)
-        drag_map(drv,"v",True)
-        drag_map(drv,"v",True)
-    for i in range(2):
-        search_alerts(drv)
-        time.sleep(1)
-        drag_map(drv,"h",False)
-        drag_map(drv,"h",False)
-        drag_map(drv,"h",False)
 
 def remove_elements_by_class(drv, class_name):
     script = f"""
@@ -118,21 +56,74 @@ def remove_elements_by_class(drv, class_name):
     """
     drv.execute_script(script)
 
+#Busca el archivo georrss que que crea en network -> response, es un json con muchas alertas
+#Es la forma más rápida de scrapear los 10k datos
+def fetch_georrss_alerts(drv):
+    print("\033[94mBuscando archivo GeoRSS...\033[0m")
+    for request in drv.requests:
+        if request.response and "georss" in request.url:
+            print(f"\033[92mGeoRSS encontrado: {request.url}\033[0m")
+            try:
+                body_str = request.response.body.decode('utf-8')
+                data = json.loads(body_str)
+                alerts = data.get("alerts", [])
+                
+                for alert in alerts:
+                    if "comments" in alert:
+                        del alert["comments"]
+                
+                return alerts
+            except Exception as e:
+                print(f"\033[91mError procesando el GeoRSS: {e}\033[0m")
+                return []
+    else:
+        print("\033[91mNo se encontró ningún GeoRSS.\033[0m")
+        return []
+
+def collect_alerts(drv, wait_alerts=10000):
+    collected_alerts = []
+    visited_uuids = set()
+
+    # Definir secuencia de movimientos
+    move_sequence = [("v", True),("h", True),("v", False),("h", False)]
+    move_index = 0  # Para rotar en la secuencia
+
+    while len(collected_alerts) < wait_alerts:
+        alerts = fetch_georrss_alerts(drv)
+        for alert in alerts:
+            collected_alerts.append(alert)
+
+        print(f"\033[93mAlerts acumulados: {len(collected_alerts)}\033[0m")
+
+        if len(collected_alerts) >= wait_alerts:
+            break
+
+        # Mover el mapa en circulos
+        direction, forward = move_sequence[move_index]
+        drag_map(drv, direction=direction, forward=forward)
+        move_index = (move_index + 1) % len(move_sequence)
+        time.sleep(2)  # Esperar que lleguen nuevos requests
+
+    # Guardar, cambiar por enviarlo a la bdd
+    filename = f"alerts_10k_{int(time.time())}.json"
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(collected_alerts, f, ensure_ascii=False, indent=2)
+
+    print(f"\033[92mSe guardaron {len(collected_alerts)} alerts en '{filename}'\033[0m")
+
+
 #----------------------------------- Main
-# Iniciar navegador
-# Configurar opciones
 chrome_options = Options()
-chrome_options.add_argument("--start-fullscreen")  # Pantalla completa (modo F11)
+chrome_options.add_argument("--start-fullscreen")
 
 driver = webdriver.Chrome(options=chrome_options)
 
 try:
-    driver.get("https://www.waze.com/es-419/live-map/")
-    time.sleep(3)  # Espera inicial para que cargue el contenido básico
+    driver.get("https://www.waze.com/es-418/live-map/")
+    time.sleep(3)
 
-    wait = WebDriverWait(driver, 2) # Espera al popup inicial
+    wait = WebDriverWait(driver, 5)
 
-    # Funcion creada arriba
     close_popup(driver, wait)
 
     wait.until(EC.presence_of_element_located((By.CLASS_NAME, "wz-livemap")))
@@ -140,14 +131,9 @@ try:
     remove_elements_by_class(driver,"wz-header")
     remove_elements_by_class(driver,"wm-cards")
     remove_elements_by_class(driver,"leaflet-control-container")
+    time.sleep(2)
 
-    # Acá se ejecutan distintas acciones, ver funciones arriba
-    # Hace zoom
-    time.sleep(1)
-    double_zoom(driver)
-
-    time.sleep(1)
-    move_and_search(driver)
+    collect_alerts(driver,700)
 
 finally:
     driver.quit()
