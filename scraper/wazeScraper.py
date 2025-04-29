@@ -6,27 +6,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 import json
 import time
-import os
-from pymongo import MongoClient
-# from storage.mongoUploader import insert_alerts
 
 #----------------------------------- Funcs
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://joaquinsilva:eAIk2hvP0MXb9WpX@sisdis1.so1vzho.mongodb.net/?retryWrites=true&w=majority&appName=SisDis1")
-
-client = MongoClient(MONGO_URI)
-db = client["waze_alerts_db"]
-alerts_collection = db["alerts"]
-
-def insert_alerts(alert_list):
-    if alert_list:
-        alerts_collection.insert_many(alert_list)
-        print(f"Se insertaron {len(alert_list)} alertas.")
-    else:
-        print("No hay alertas para insertar.")
-
-def get_alerts(limit=100):
-    return list(alerts_collection.find().limit(limit))
-
 
 def close_popup(drv, wt):
     try:
@@ -90,8 +71,7 @@ def fetch_georrss_alerts(drv):
                 for alert in alerts:
                     if "comments" in alert:
                         del alert["comments"]
-
-                print(f"{len(alerts)} alertas encontradas en esta iteración.")
+                
                 return alerts
             except Exception as e:
                 print(f"\033[91mError procesando el GeoRSS: {e}\033[0m")
@@ -131,27 +111,6 @@ def collect_alerts(drv, wait_alerts=10000):
 
     print(f"\033[92mSe guardaron {len(collected_alerts)} alerts en '{filename}'\033[0m")
 
-def collect_and_store_alerts(drv): 
-    collected_alerts = []
-    move_sequence = [("v", True),("h", True),("v", False),("h", False)]
-    move_index = 0
-
-    while len(collected_alerts) < 1000:
-        alerts = fetch_georrss_alerts(drv)
-        collected_alerts.extend(alerts)
-
-        print(f"Alerts acumulados: {len(collected_alerts)}")
-
-        if len(collected_alerts) >= 1000:
-            break
-
-        direction, forward = move_sequence[move_index]
-        drag_map(drv, direction=direction, forward=forward)
-        move_index = (move_index + 1) % len(move_sequence)
-        time.sleep(2)
-
-    insert_alerts(collected_alerts)
-    print(f"Total de alertas recopiladas: {len(collected_alerts)}")
 
 #----------------------------------- Main
 chrome_options = Options()
@@ -174,7 +133,7 @@ try:
     remove_elements_by_class(driver,"leaflet-control-container")
     time.sleep(2)
 
-    collect_and_store_alerts(driver)
+    collect_alerts(driver,700)
 
 finally:
     driver.quit()
