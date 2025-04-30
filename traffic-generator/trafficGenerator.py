@@ -68,6 +68,7 @@ def esperar_mongodb(min_datos=10000):
 def generar_trafico(duracion_segundos=20, tasa_poisson=5, media_exponencial=1.0):
     tiempo_inicio = time.time()
     evento_id = 0
+    miss = 0
 
     print("Iniciando simulación de tráfico...\n")
 
@@ -86,7 +87,8 @@ def generar_trafico(duracion_segundos=20, tasa_poisson=5, media_exponencial=1.0)
                     cached = get_from_cache(uuid)
                     if not cached:
                         set_to_cache(uuid, serializar_evento(evento))
-                    print(f"Evento #{evento_id}: {uuid}, {reportBy}, {street}")
+                        miss +=1
+                    print(f"Evento #{evento_id}: \033[38;5;93m{uuid}, \033[38;5;213m{reportBy}, \033[35m{street}\033[0m")
                     evento_id += 1
         else:
             intervalo = np.random.exponential(media_exponencial)
@@ -98,12 +100,14 @@ def generar_trafico(duracion_segundos=20, tasa_poisson=5, media_exponencial=1.0)
                 cached = get_from_cache(uuid)
                 if not cached:
                     set_to_cache(uuid, serializar_evento(evento))
+                    miss +=1
                 print(f"Evento #{evento_id}: {uuid}")
                 evento_id += 1
 
-        time.sleep(1)
+        time.sleep(2)
 
     print(f"\nFinalizado. Se simularon {evento_id} eventos.")
+    print(f"\033[38;5;208mHitRate: {((evento_id-miss)/evento_id)*100}%\033[0m")
 
 if __name__ == "__main__":
     esperar_mongodb(10000)
