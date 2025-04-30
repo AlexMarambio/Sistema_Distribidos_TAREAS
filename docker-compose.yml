@@ -1,41 +1,19 @@
 services:
-  selenium:
-    image: selenium/standalone-chrome:3.141.59-20210929  # Specific Selenium 3 version
-    container_name: selenium
-    ports:
-      - "4444:4444"
-    shm_size: "2g"
-    environment:
-      - SCREEN_WIDTH=1920
-      - SCREEN_HEIGHT=1080
-    networks:
-      - scraper-network
-
   mongo:
-    image: mongo:latest
-    container_name: mongo
+    image: mongo
     ports:
       - "27017:27017"
     volumes:
-      - mongo-data:/data/db
-    networks:
-      - scraper-network
+      - mongo_data:/data/db
 
   scraper:
-    build: ./scraper
-    container_name: waze-scraper
+    build:
+      context: .
+      dockerfile: scraper/Dockerfile
     depends_on:
-      - selenium
       - mongo
     environment:
-      - SELENIUM_HOST=selenium
-      - MONGO_URI=mongodb://mongo:27017/waze_alerts_db
-    networks:
-      - scraper-network
-
-networks:
-  scraper-network:
-    driver: bridge
+      - MONGO_URI=mongodb://mongo:27017/
 
 volumes:
-  mongo-data:
+  mongo_data:

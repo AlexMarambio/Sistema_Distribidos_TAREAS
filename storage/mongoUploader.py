@@ -2,12 +2,14 @@ from pymongo import MongoClient
 import os
 
 # URI de MongoDB Atlas (configurar bien)
-MONGO_URI = os.getenv("MONGO_URI", "mongodb+srv://joaquinsilva:eAIk2hvP0MXb9WpX@sisdis1.so1vzho.mongodb.net/?retryWrites=true&w=majority&appName=SisDis1")
+MONGO_URI = os.getenv("MONGO_URI")
 
+# Conexión a MongoDB
 client = MongoClient(MONGO_URI)
-db = client["waze_alerts_db"]
+db = client["waze-alerts"]
 alerts_collection = db["alerts"]
 
+# Función para insertar alertas
 def insert_alerts(alert_list):
     if alert_list:
         alerts_collection.insert_many(alert_list)
@@ -15,5 +17,6 @@ def insert_alerts(alert_list):
     else:
         print("No hay alertas para insertar.")
 
+# Función para obtener alertas
 def get_alerts(limit=100):
     return list(alerts_collection.find().limit(limit))
