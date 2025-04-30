@@ -27,7 +27,7 @@ def main():
     total_alerts = 0
     box_index = 0
 
-    while total_alerts < 10000:
+    while total_alerts < 100:
         t, b, l, r = BOUNDING_BOXES[box_index]
         alerts = obtain_alerts(b, l, t, r)
 
