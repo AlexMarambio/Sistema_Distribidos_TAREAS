@@ -31,8 +31,8 @@ def main():
         t, b, l, r = BOUNDING_BOXES[box_index]
         alerts = obtain_alerts(b, l, t, r)
 
-        # Llamamos a la función para insertar las alertas en MongoDB
-        insert_alerts(alerts)
+        filtered_alerts = [{k: v for k, v in alert.items() if k != "comments"} for alert in alerts]
+        insert_alerts(filtered_alerts)
         total_alerts += len(alerts)
 
         print(f"\033[96m[{box_index}] Acumulado: {total_alerts} alertas.\033[0m")
