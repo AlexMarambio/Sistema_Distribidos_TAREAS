@@ -68,12 +68,14 @@ Una vez ya está listo se comenzará el tráfico:
 ![Suficiente](img/1/documents_suficioentes.png)
 ![Init](img/1/inicio_traffic.png)
 
-Se podrá ver con distintos colores los eventos que procesa, el tráfico se realizara ocupando una distribución **exponencial** (generando tiempo de espera) o con **poisson** (generando eventos simultaneos aleartorio). Y se verá si se hizo *hit* o *miss*.
+Se podrá ver con distintos colores la **uuid**, *reportador* y calle de los eventos que procesa, el tráfico se realizara ocupando una distribución **exponencial** (generando tiempo de espera) o con **poisson** (generando eventos simultaneos aleartorio). Y se verá si se hizo *hit* o *miss*.
 ![Exp](img/1/exponencial.png)
+HIT:
 ![Hit](img/1/cache_hit.png)
+MISS:
 ![Miss](img/1/cache_miss.png)
 
 ### Final tráfico
-Se podrá ver lña taza de hit que hubo:
+Se podrá ver la taza de hit que hubo:
 ![Rate](img/1/hit_rate.png)
 ![Rate2](img/1/hit_rate_2.png)
