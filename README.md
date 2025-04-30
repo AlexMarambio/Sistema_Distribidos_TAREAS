@@ -60,6 +60,7 @@ docker-compose down
 
 # Ejecución
 ## ¿Qué esperar que ocurra?
+El scraper empezara a recopilar datos:
 ![Scraper](img/1/scraper_working.png)
 Primero, si se ejecuta por primera vez se esperara a que se rellene la BDD por lo que aparecerá algo como esto:
 ![Rellenando](img/1/waiting_docs.png)
