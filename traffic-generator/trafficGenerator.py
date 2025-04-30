@@ -1,11 +1,13 @@
 import random
 import time
+import os
 import numpy as np
 from pymongo import MongoClient
 
 # Conexión a MongoDB local o Atlas
-MONGO_URI = "mongodb://localhost:27017/"
+MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017/")
 client = MongoClient(MONGO_URI)
+
 db = client["waze-alerts"]
 alerts_collection = db["alerts"]
 
