@@ -6,6 +6,11 @@ services:
     volumes:
       - mongo_data:/data/db
 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
   scraper:
     build:
       context: .
@@ -15,5 +20,21 @@ services:
     environment:
       - MONGO_URI=mongodb://mongo:27017/
 
+  traffic_generator:
+    build:
+      context: ./traffic-generator
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+    tty: true
+
+  cache:
+    build:
+      context: ./cache
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
 volumes:
   mongo_data:
