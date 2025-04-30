@@ -60,19 +60,19 @@ docker-compose down
 
 # Ejecución
 ## ¿Qué esperar que ocurra?
-![Scraper](img/scraper_working.png)
+![Scraper](img/1/scraper_working.png)
 Primero, si se ejecuta por primera vez se esperara a que se rellene la BDD por lo que aparecerá algo como esto:
-![Rellenando](img/waiting_docs.png)
+![Rellenando](img/1/waiting_docs.png)
 Una vez ya está listo se comenzará el tráfico:
-![Suficiente](img/documents_suficioentes.png)
-![Init](img/inicio_traffic.png)
+![Suficiente](img/1/documents_suficioentes.png)
+![Init](img/1/inicio_traffic.png)
 
 Se podrá ver con distintos colores los eventos que procesa, el tráfico se realizara ocupando una distribución **exponencial** (generando tiempo de espera) o con **poisson** (generando eventos simultaneos aleartorio). Y se verá si se hizo *hit* o *miss*.
-![Exp](img/exponencial.png)
-![Hit](img/cache_hit.png)
-![Miss](img/cache_miss.png)
+![Exp](img/1/exponencial.png)
+![Hit](img/1/cache_hit.png)
+![Miss](img/1/cache_miss.png)
 
 ### Final tráfico
 Se podrá ver lña taza de hit que hubo:
-![Rate](img/hit_rate.png)
-![Rate2](img/hit_rate_2.png)
+![Rate](img/1/hit_rate.png)
+![Rate2](img/1/hit_rate_2.png)
