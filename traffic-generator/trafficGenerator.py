@@ -97,11 +97,13 @@ def generar_trafico(duracion_segundos=20, tasa_poisson=5, media_exponencial=1.0)
             evento = obtener_evento_aleatorio()
             if evento:
                 uuid = evento.get("uuid", f"sin-uuid-{evento_id}")
+                reportBy = evento.get("reportBy", f"sin-reportBy-{evento_id}")
+                street = evento.get("street", f"sin-street-{evento_id}")
                 cached = get_from_cache(uuid)
                 if not cached:
                     set_to_cache(uuid, serializar_evento(evento))
                     miss +=1
-                print(f"Evento #{evento_id}: {uuid}")
+                print(f"Evento #{evento_id}: \033[32;5;93m{uuid}, \033[32;5;213m{reportBy}, \033[31m{street}\033[0m")
                 evento_id += 1
 
         time.sleep(2)
