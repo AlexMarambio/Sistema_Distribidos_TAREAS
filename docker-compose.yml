@@ -1,10 +1,24 @@
 services:
-  mongo:
-    image: mongo
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.21
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
     ports:
-      - "27017:27017"
+      - "9200:9200"
     volumes:
-      - mongo_data:/data/db
+      - es_data:/usr/share/elasticsearch/data
+  # mongo:
+  #   image: mongo
+  #   ports:
+  #     - "27017:27017"
+  #   volumes:
+  #     - mongo_data:/data/db
 
   redis:
     image: redis:alpine
@@ -16,19 +30,19 @@ services:
       context: .
       dockerfile: scraper/Dockerfile
     depends_on:
-      - mongo
+      - elasticsearch
     environment:
-      - MONGO_URI=mongodb://mongo:27017/
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
 
   traffic_generator:
     build:
       context: ./traffic-generator
       dockerfile: Dockerfile
     depends_on:
-      - mongo
+      - elasticsearch
       - redis
     environment:
-      - MONGO_URI=mongodb://mongo:27017/
+      - ELASTICSEARCH_HOST=http://elasticsearch:9200
       - CACHE_URI=http://cache:5000/cache
 
   cache:
@@ -41,4 +55,4 @@ services:
       - REDIS_URI=redis://redis:6379
 
 volumes:
-  mongo_data:
+  es_data:
