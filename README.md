@@ -20,6 +20,11 @@ Una vez clonado debes ingresar a la carpeta *raiz* de nuestro repositorio:
 ```
 cd Sistema_Distribidos_TAREAS/
 ```
+*NOTA:* Probablemente notes que hay un docker compose separado por parte de la tarea, accede mediante:
+```
+cd Sistema_Distribidos_TAREAS/2-tarea
+```
+- Esta es la más actual.
 
 ### Build y levantamiento
 En un solo comando puedes buildear y correr el programa:
