@@ -1,0 +1,44 @@
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  scraper:
+    build:
+      context: .
+      dockerfile: scraper/Dockerfile
+    depends_on:
+      - mongo
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+
+  traffic_generator:
+    build:
+      context: ./traffic-generator
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+      - redis
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+      - CACHE_URI=http://cache:5000/cache
+
+  cache:
+    build:
+      context: ./cache
+      dockerfile: Dockerfile
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URI=redis://redis:6379
+
+volumes:
+  mongo_data:
