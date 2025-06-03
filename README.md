@@ -1,4 +1,9 @@
 # Waze Scraper
+## Tareas para parte 2 
+- Joako: cambiar BDD de mongo a elastic
+- Joako: Filtering
+- Analisis con apache pig
+   
 ## Configuración previa
 Para iniciar nuestro **Waze Scraper** primero se debe clonar el repositorio para eso escoge tu *caperta* de preferencia:
 - Si estásen linux (recomendado):
