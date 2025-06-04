@@ -49,6 +49,7 @@ services:
     depends_on:
       - mongo
     volumes:
+      - mongo_data:/data/db
       - hadoop_data:/data
     environment:
       - MONGO_URI=mongodb://mongo:27017/
@@ -66,9 +67,15 @@ services:
       - mongo-to-csv
     volumes:
       - hadoop_data:/data
+      - ../pig/codes:/codes
+    stdin_open: true
+    tty: true
+    command: ["/entrypoint.sh"]
     ports:
-      - "9870:9870"
       - "8088:8088"
+      - "50070:50070"
+      - "9000:9000"
+      - "19888:19888"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9870"]
       interval: 30s
