@@ -1,10 +1,13 @@
 import csv
 from pymongo import MongoClient
 from datetime import datetime
+import os
+
+MONGO_URI = os.getenv("MONGO_URI")
 
 def export_to_csv():
-    client = MongoClient('mongodb://mongo:27017/')
-    db = client['waze_alerts']
+    client = MongoClient(MONGO_URI)
+    db = client['waze-alerts']
     collection = db['alerts']
     
     documents = collection.find()
@@ -27,14 +30,9 @@ def export_to_csv():
         
         for doc in documents:
             doc_copy = doc.copy()
+            print(f"PARSING doc: {doc_copy['_id']}")
             if '_id' in doc_copy:
                 del doc_copy['_id']
-            if 'location' in doc_copy:
-                doc_copy['location_x'] = doc_copy['location']['x']
-                doc_copy['location_y'] = doc_copy['location']['y']
-                del doc_copy['location']
-            if 'pubMillis' in doc_copy:
-                doc_copy['pubMillis'] = str(doc_copy['pubMillis'])
             
             writer.writerow(doc_copy)
 
