@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   mongo:
     image: mongo
@@ -13,8 +15,8 @@ services:
 
   scraper:
     build:
-      context: .
-      dockerfile: scraper/Dockerfile
+      context: ..
+      dockerfile: ./scraper/Dockerfile
     depends_on:
       - mongo
     environment:
@@ -22,7 +24,7 @@ services:
 
   traffic_generator:
     build:
-      context: ./traffic-generator
+      context: ../traffic-generator
       dockerfile: Dockerfile
     depends_on:
       - mongo
@@ -33,12 +35,46 @@ services:
 
   cache:
     build:
-      context: ./cache
+      context: ../cache
       dockerfile: Dockerfile
     depends_on:
       - redis
     environment:
       - REDIS_URI=redis://redis:6379
 
+  mongo-to-csv:
+    build:
+      context: ../mongo-to-csv
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo
+    volumes:
+      - hadoop_data:/data
+    environment:
+      - MONGO_URI=mongodb://mongo:27017/
+    healthcheck:
+      test: ["CMD", "python", "code.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  hadoop-pig:
+    build:
+      context: ../pig
+      dockerfile: Dockerfile
+    depends_on:
+      - mongo-to-csv
+    volumes:
+      - hadoop_data:/data
+    ports:
+      - "9870:9870"
+      - "8088:8088"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   mongo_data:
+  hadoop_data:

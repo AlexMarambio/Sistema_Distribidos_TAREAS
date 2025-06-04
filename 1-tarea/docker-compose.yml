@@ -13,8 +13,8 @@ services:
 
   scraper:
     build:
-      context: .
-      dockerfile: scraper/Dockerfile
+      context: ..
+      dockerfile: ./scraper/Dockerfile
     depends_on:
       - mongo
     environment:
@@ -22,7 +22,7 @@ services:
 
   traffic_generator:
     build:
-      context: ./traffic-generator
+      context: ../traffic-generator
       dockerfile: Dockerfile
     depends_on:
       - mongo
@@ -33,7 +33,7 @@ services:
 
   cache:
     build:
-      context: ./cache
+      context: ../cache
       dockerfile: Dockerfile
     depends_on:
       - redis
