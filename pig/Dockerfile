@@ -1,52 +1,44 @@
-# Imagen base con Ubuntu
-FROM ubuntu:20.04
+FROM openjdk:8-jdk
 
-# Evitar preguntas interactivas al instalar paquetes
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Instalación de dependencias necesarias
-RUN apt-get update && \
-    apt-get install -y openjdk-11-jdk wget python3 python3-pip unzip && \
-    apt-get clean
-
-# Instalación de Hadoop (requisito de Pig)
-RUN wget https://downloads.apache.org/hadoop/common/hadoop-3.3.6/hadoop-3.3.6.tar.gz && \
-    tar -xvzf hadoop-3.3.6.tar.gz -C /opt && \
-    mv /opt/hadoop-3.3.6 /opt/hadoop && \
-    rm hadoop-3.3.6.tar.gz
-
+ENV HADOOP_VERSION=3.3.6
+ENV PIG_VERSION=0.17.0
 ENV HADOOP_HOME=/opt/hadoop
-ENV PATH=$HADOOP_HOME/bin:$PATH
-
-# Instalación de Pig
-RUN wget https://downloads.apache.org/pig/pig-0.17.0/pig-0.17.0.tar.gz && \
-    tar -xvzf pig-0.17.0.tar.gz -C /opt && \
-    mv /opt/pig-0.17.0 /opt/pig && \
-    rm pig-0.17.0.tar.gz
-
 ENV PIG_HOME=/opt/pig
-ENV PATH=$PIG_HOME/bin:$PATH
+ENV PATH=$PATH:$HADOOP_HOME/bin:$PIG_HOME/bin
 
-# Añadir soporte para JSON en Pig
-RUN wget https://repo1.maven.org/maven2/com/googlecode/json-simple/json-simple/1.1.1/json-simple-1.1.1.jar -P /opt/pig/lib/
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wget \
+    ssh \
+    pdsh \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar elasticsearch client para Python
-RUN pip3 install elasticsearch
+# Install Hadoop
+RUN wget https://archive.apache.org/dist/hadoop/core/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz && \
+    tar -xzf hadoop-${HADOOP_VERSION}.tar.gz -C /opt/ && \
+    mv /opt/hadoop-${HADOOP_VERSION} $HADOOP_HOME && \
+    rm hadoop-${HADOOP_VERSION}.tar.gz
 
-# Establecer PYTHONPATH para que reconozca el módulo storage
-ENV PYTHONPATH=/storage
+# Install Pig
+RUN wget https://archive.apache.org/dist/pig/pig-${PIG_VERSION}/pig-${PIG_VERSION}.tar.gz && \
+    tar -xzf pig-${PIG_VERSION}.tar.gz -C /opt/ && \
+    mv /opt/pig-${PIG_VERSION} $PIG_HOME && \
+    rm pig-${PIG_VERSION}.tar.gz
 
-# Establecer el directorio de trabajo
-WORKDIR /pig
+# Configure Hadoop
+COPY core-site.xml $HADOOP_HOME/etc/hadoop/
+COPY hdfs-site.xml $HADOOP_HOME/etc/hadoop/
+COPY mapred-site.xml $HADOOP_HOME/etc/hadoop/
+COPY yarn-site.xml $HADOOP_HOME/etc/hadoop/
 
-# Copiar scripts Pig y archivo alerts.json (cuando esté generado)
-COPY ../pig/ /pig/
+# Copy Pig script
+COPY process.pig /app/process.pig
 
-# Copiar script Python
-COPY ../tools/export_alerts.py /tools/export_alerts.py
+# Startup script
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Copiar módulo Python de conexión a Elasticsearch
-COPY ../storage /storage
+WORKDIR /app
+EXPOSE 8088 9870 9000
 
-# Comando por defecto (puedes personalizarlo según necesites)
-CMD ["bash"]
+ENTRYPOINT ["/entrypoint.sh"]
