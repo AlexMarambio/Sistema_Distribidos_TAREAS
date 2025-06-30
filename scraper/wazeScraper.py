@@ -29,9 +29,9 @@ def main():
     total_alerts = 0
     box_index = 0
 
-    not_ready = get_amount(10000)
-
-    while total_alerts < 10000 and not_ready:
+    not_ready = get_amount(60000)
+# Cambiar numeros antes de enviar la tarea 3 60000 dbería bastar
+    while total_alerts < 60000 and not_ready:
         t, b, l, r = BOUNDING_BOXES[box_index]
         alerts = obtain_alerts(b, l, t, r)
 
