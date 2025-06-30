@@ -1,9 +1,11 @@
 FROM python:3.9-slim
 
 WORKDIR /app
+COPY ../ /app
+
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
 
 RUN pip install pymongo pandas
 
-COPY converter.py .
-
-CMD ["python", "converter.py"]
+CMD ["python", "mongo-to-csv/converter.py"]

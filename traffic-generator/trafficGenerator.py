@@ -4,6 +4,7 @@ import os
 import numpy as np
 import requests
 from pymongo import MongoClient
+from storage.mongoUploader import esperar_mongodb
 
 # MongoDB
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://mongo:27017/")
@@ -48,20 +49,6 @@ def obtener_evento_aleatorio():
         return None
     skip = random.randint(0, count - 1)
     return alerts_collection.find().skip(skip).limit(1)[0]
-
-def esperar_mongodb(min_datos=10000):
-    while True:
-        try:
-            # Verifica que Mongo esté activo
-            client.admin.command("ping")
-            cantidad = alerts_collection.estimated_document_count()
-            print(f"Esperando datos en MongoDB... actualmente hay {cantidad} documentos")
-            if cantidad >= min_datos:
-                print("MongoDB listo con suficientes datos.")
-                break
-        except Exception as e:
-            print(f"Esperando conexión a MongoDB... {e}")
-        time.sleep(2)
 
 
 # Generador de tráfico con cache
@@ -112,5 +99,5 @@ def generar_trafico(duracion_segundos=20, tasa_poisson=5, media_exponencial=1.0)
     print(f"\033[38;5;208mHitRate: {((evento_id-miss)/evento_id)*100}%\033[0m")
 
 if __name__ == "__main__":
-    esperar_mongodb(10000)
+    esperar_mongodb(60000)
     generar_trafico(duracion_segundos=120)
