@@ -1,3 +1,4 @@
+-- 1. Carga de datos originales desde HDFS (/data/waze_data.csv)
 raw_data = LOAD '/data/waze_data.csv'
     USING PigStorage(',')
     AS (
@@ -30,8 +31,10 @@ raw_data = LOAD '/data/waze_data.csv'
         toNodeId:chararray
     );
 
+-- 2. Eliminar duplicados exactos
 deduped = DISTINCT raw_data;
 
+-- 3. Filtrar registros válidos con campos clave no nulos y no vacíos
 clean_data = FILTER deduped BY 
     (uuid IS NOT NULL AND TRIM(uuid) != '' AND
      type IS NOT NULL AND TRIM(type) != '' AND
@@ -39,14 +42,16 @@ clean_data = FILTER deduped BY
      street IS NOT NULL AND TRIM(street) != '' AND
      pubMillis IS NOT NULL AND TRIM(pubMillis) != '');
 
+-- 4. Normalización y casting
 homogenized = FOREACH clean_data GENERATE
     uuid,
-    UPPER(TRIM(type)) AS type_norm,
-    UPPER(TRIM(city)) AS city_norm,
-    UPPER(TRIM(street)) AS street_norm,
+    UPPER(TRIM(type)) AS type,
+    UPPER(TRIM(city)) AS city,
+    UPPER(TRIM(street)) AS street,
     (long)pubMillis AS timestamp;
 
-grouped = GROUP homogenized BY (type_norm, city_norm);
+-- 5. (Opcional) Agrupación y estadísticas básicas (si la necesitas)
+grouped = GROUP homogenized BY (type, city);
 
 unified = FOREACH grouped GENERATE
     FLATTEN(group) AS (type, city),
@@ -54,4 +59,5 @@ unified = FOREACH grouped GENERATE
     MIN(homogenized.timestamp) AS first_timestamp,
     MAX(homogenized.timestamp) AS last_timestamp;
 
-STORE homogenized INTO '/output/datos_clean' USING PigStorage(',');
+-- 6. Guardar los datos limpios y normalizados para el siguiente script
+STORE homogenized INTO 'cleaned_records' USING PigStorage(',');

@@ -3,6 +3,7 @@ import time
 import os
 from storage.mongoUploader import insert_alerts  # Importa la función de inserción de Mongo
 from storage.mongoUploader import get_alerts
+from storage.mongoUploader import get_amount
 
 # Bounding boxes
 BOUNDING_BOXES = [
@@ -24,10 +25,13 @@ def obtain_alerts(b, l, t, r):
 
 # Función principal
 def main():
+    not_ready = True
     total_alerts = 0
     box_index = 0
 
-    while total_alerts < 10000:
+    not_ready = get_amount(60000)
+# Cambiar numeros antes de enviar la tarea 3 60000 dbería bastar
+    while total_alerts < 60000 and not_ready:
         t, b, l, r = BOUNDING_BOXES[box_index]
         alerts = obtain_alerts(b, l, t, r)
 
@@ -38,8 +42,10 @@ def main():
         print(f"\033[96m[{box_index}] Acumulado: {total_alerts} alertas.\033[0m")
         box_index = (box_index + 1) % len(BOUNDING_BOXES)
         time.sleep(1)
-
-    print(f"\033[94mScraping terminado. Se guardaron {total_alerts} alertas.\033[0m")
+    if not_ready:
+        print(f"\033[94mScraping terminado. Se guardaron {total_alerts} alertas.\033[0m")
+    else:
+        print(f"\033[94mScraping cancelado con éxito\033[0m")
 
 if __name__ == "__main__":
     print("Inciando scraping:")

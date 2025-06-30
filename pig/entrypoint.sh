@@ -4,10 +4,10 @@
 HADOOP_HOME=/opt/hadoop
 PIG_HOME=/opt/pig
 DATA_DIR=/data
-HDFS_INPUT=/input
+HDFS_INPUT=/data
 HDFS_OUTPUT=/output
-PIG_SCRIPT=/scripts/filter.pig
-PIG_SCRIPT2=/scripts/process.pig
+PIG_SCRIPT=/codes/filter.pig
+PIG_SCRIPT2=/codes/process.pig
 CSV_FILE=waze_data.csv
 HDFS_FILE=waze_data.csv
 
@@ -103,32 +103,52 @@ echo "🐷 Ejecutando script Pig de análisis (process.pig)..."
 sleep 5
 $PIG_HOME/bin/pig -f $PIG_SCRIPT2
 
+echo "📁 Verificando que se haya generado /output/analysis_by_type..."
+if $HADOOP_HOME/bin/hdfs dfs -test -e /user/hadoop/cleaned_records; then
+    echo "✅ Análisis por tipo generado correctamente."
+else
+    echo "❌ No se generó /user/hadoop/cleaned_records. Revisa que los nombres de campos estén alineados entre scripts."
+fi
+
+
 # Mostrar resultados
 echo "📤 Mostrando resultados de salida Pig:"
 
 echo "📄 Registros limpios:"
-$HADOOP_HOME/bin/hdfs dfs -cat /output/cleaned_records/part-r-00000
+$HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/cleaned_records/part-r-00000
 sleep 5
 
 echo "📊 Análisis por comuna:"
-$HADOOP_HOME/bin/hdfs dfs -cat /output/analysis_by_city/part-r-00000
+$HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_city/part-r-00000
 sleep 5
 
 echo "🕒 Análisis por día (formato epoch):"
-$HADOOP_HOME/bin/hdfs dfs -cat /output/analysis_by_day/part-r-00000
+$HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_day/part-r-00000
 sleep 5
 
 echo "🛣️  Análisis por calle y comuna:"
-$HADOOP_HOME/bin/hdfs dfs -cat /output/analysis_by_street_city/part-r-00000
+$HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_street_city/part-r-00000
 sleep 5
 
 echo "🚨 Análisis por tipo de alerta:"
-$HADOOP_HOME/bin/hdfs dfs -cat /output/analysis_by_type/part-r-00000
+$HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_type/part-r-00000
 sleep 5
 
 echo "🌐 Análisis por tipo de alerta y comuna:"
-$HADOOP_HOME/bin/hdfs dfs -cat /output/analysis_by_type_city/part-r-00000
+$HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_type_city/part-r-00000
 sleep 5
+
+echo "📥 Descargando resultados a ./data local..."
+
+mkdir -p $DATA_DIR
+mkdir -p $DATA_DIR/output
+
+
+$HADOOP_HOME/bin/hdfs dfs -get -f /user/hadoop/analysis_by_city $DATA_DIR/output/
+$HADOOP_HOME/bin/hdfs dfs -get -f /user/hadoop/analysis_by_type $DATA_DIR/output/
+$HADOOP_HOME/bin/hdfs dfs -get -f /user/hadoop/analysis_by_type_city $DATA_DIR/output/
+$HADOOP_HOME/bin/hdfs dfs -get -f /user/hadoop/analysis_by_street_city $DATA_DIR/output/
+$HADOOP_HOME/bin/hdfs dfs -get -f /user/hadoop/analysis_by_day $DATA_DIR/output/
 
 # Mantener contenedor activo
 echo "✅ Todos los procesos finalizados exitosamente. El contenedor permanece activo para revisión."
