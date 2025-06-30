@@ -2,7 +2,7 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-RUN pip install pymongo
+RUN pip install pymongo pandas
 
 COPY converter.py .
 

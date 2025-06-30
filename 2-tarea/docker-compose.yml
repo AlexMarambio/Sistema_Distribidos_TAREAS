@@ -50,7 +50,7 @@ services:
       - mongo
     volumes:
       - mongo_data:/data/db
-      - hadoop_data:/data
+      - ./data:/data
     environment:
       - MONGO_URI=mongodb://mongo:27017/
     healthcheck:
@@ -66,7 +66,7 @@ services:
     depends_on:
       - mongo-to-csv
     volumes:
-      - hadoop_data:/data
+      - ./data:/data
       - ../pig/codes:/codes
     stdin_open: true
     tty: true
@@ -85,3 +85,4 @@ services:
 volumes:
   mongo_data:
   hadoop_data:
+  hadoop_output:
