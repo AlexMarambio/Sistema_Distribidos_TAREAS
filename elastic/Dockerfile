@@ -1,16 +1,15 @@
 FROM python:3.10-slim
 
 RUN apt-get update && \
-    pip install elasticsearch pymongo && \
+    pip install "elasticsearch<8.0.0" pymongo && \
     rm -rf /var/lib/apt/lists/*
 
 ENV HADOOP_HOME=/opt/hadoop
 ENV PATH=$PATH:$HADOOP_HOME/bin
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 WORKDIR /app
 COPY ../ /app
 
-ENV PYTHONPATH=/app
-ENV PYTHONUNBUFFERED=1
-
-CMD ["bash", "-c", "python elastic/mongo_to_elastic.py && python elastic/hdfs_to_elastic.py"]
+CMD ["bash", "elastic/wait.sh"]

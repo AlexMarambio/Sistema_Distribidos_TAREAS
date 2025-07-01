@@ -16,7 +16,7 @@ collection = mongo_client[DB_NAME][COLLECTION_NAME]
 
 es = Elasticsearch(
     ES_HOST,
-    basic_auth=(ES_USER, ES_PASS),
+    http_auth=(ES_USER, ES_PASS),
     verify_certs=False  # o True con certificados configurados correctamente
 )
 
