@@ -24,8 +24,8 @@ services:
 
   traffic_generator:
     build:
-      context: ../traffic-generator
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: ./traffic-generator/Dockerfile
     depends_on:
       - mongo
       - redis

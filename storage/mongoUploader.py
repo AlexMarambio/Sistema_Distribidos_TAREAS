@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 import os
+import time
 
 MONGO_URI = os.getenv("MONGO_URI")
 
@@ -27,3 +28,17 @@ def insert_alerts(alert_list):
 
 def get_alerts(limit=100):
     return list(alerts_collection.find().limit(limit))
+
+def esperar_mongodb(min_datos=10000):
+    while True:
+        try:
+            # Verifica que Mongo esté activo
+            client.admin.command("ping")
+            cantidad = alerts_collection.estimated_document_count()
+            print(f"Esperando datos en MongoDB... actualmente hay {cantidad} documentos")
+            if cantidad >= min_datos:
+                print("MongoDB listo con suficientes datos.")
+                break
+        except Exception as e:
+            print(f"Esperando conexión a MongoDB... {e}")
+        time.sleep(2)

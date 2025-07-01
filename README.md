@@ -1,8 +1,18 @@
 # Waze Scraper
-## Tareas para parte 2 
-- Joako: cambiar BDD de mongo a elastic
-- Joako: Filtering
-- Analisis con apache pig
+## Tarea 3
+**Para correr**
+```
+cd Sistema_Distribidos_TAREAS/2-tarea
+```
+```
+docker-compose up --build
+```
+- *Hadoop:* 
+http://localhost:50070 y para ver el estado http://localhost:8088.
+- *elastic:* 
+http://localhost:5601/
+user: elastic
+pss: changeme
    
 ## Configuración previa
 Para iniciar nuestro **Waze Scraper** primero se debe clonar el repositorio para eso escoge tu *caperta* de preferencia:

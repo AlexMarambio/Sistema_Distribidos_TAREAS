@@ -12,11 +12,11 @@ CSV_FILE=waze_data.csv
 HDFS_FILE=waze_data.csv
 
 # Iniciar servicios SSH y Hadoop
-echo "🛠️  Preparando entorno..."
-echo "🔐 Iniciando servicio SSH..."
+echo "Preparando entorno..."
+echo "Iniciando servicio SSH..."
 sudo service ssh start
 
-echo "📦 Verificando si es necesario formatear NameNode..."
+echo "Verificando si es necesario formatear NameNode..."
 if [ ! -d "$HADOOP_HOME/data/namenode/current" ]; then
     $HADOOP_HOME/bin/hdfs namenode -format -force
 fi
@@ -24,10 +24,10 @@ fi
 ssh-keyscan -H localhost >> ~/.ssh/known_hosts 2>/dev/null
 ssh-keyscan -H 0.0.0.0 >> ~/.ssh/known_hosts 2>/dev/null
 
-echo "🧱 Iniciando HDFS (start-dfs.sh)..."
+echo "Iniciando HDFS (start-dfs.sh)..."
 $HADOOP_HOME/sbin/start-dfs.sh
 
-echo "🌀 Iniciando YARN (start-yarn.sh)..."
+echo "Iniciando YARN (start-yarn.sh)..."
 $HADOOP_HOME/sbin/start-yarn.sh
 
 echo "⏳ Esperando a que HDFS termine de inicializarse..."
@@ -84,15 +84,15 @@ fi
 export PIG_CLASSPATH=$HADOOP_HOME/etc/hadoop:$HADOOP_HOME/share/hadoop/common/*:$HADOOP_HOME/share/hadoop/mapreduce/*:$HADOOP_HOME/share/hadoop/hdfs/*:$HADOOP_HOME/share/hadoop/yarn/*
 
 # Esperar que YARN esté disponible
-echo "📡 Esperando disponibilidad de YARN..."
+echo "Esperando disponibilidad de YARN..."
 until $HADOOP_HOME/bin/yarn node -list 2>/dev/null | grep -q "RUNNING"; do
     sleep 5
 done
 
-echo "🧾 Verificando presencia del archivo en HDFS:"
+echo "Verificando presencia del archivo en HDFS:"
 $HADOOP_HOME/bin/hdfs dfs -ls $HDFS_INPUT/$HDFS_FILE
 
-echo "📘 Iniciando JobHistory Server..."
+echo "Iniciando JobHistory Server..."
 $HADOOP_HOME/sbin/mr-jobhistory-daemon.sh start historyserver
 
 # Ejecutar scripts Pig
@@ -111,32 +111,39 @@ else
 fi
 
 
-# Mostrar resultados
-echo "📤 Mostrando resultados de salida Pig:"
+## Colores
+GREEN="\033[0;32m"
+LIGHT_GREEN="\033[1;32m"
+CYAN="\033[0;36m"
+RESET="\033[0m"
 
-echo "📄 Registros limpios:"
+# Mostrar resultados
+echo -e "${LIGHT_GREEN}==== Mostrando resultados de salida Pig ====${RESET}"
+
+echo -e "${GREEN}- Registros limpios:${RESET}"
 $HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/cleaned_records/part-r-00000
 sleep 5
 
-echo "📊 Análisis por comuna:"
+echo -e "${GREEN}- Análisis por comuna:${RESET}"
 $HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_city/part-r-00000
 sleep 5
 
-echo "🕒 Análisis por día (formato epoch):"
+echo -e "${GREEN}- Análisis por día (formato epoch):${RESET}"
 $HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_day/part-r-00000
 sleep 5
 
-echo "🛣️  Análisis por calle y comuna:"
+echo -e "${GREEN}- Análisis por calle y comuna:${RESET}"
 $HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_street_city/part-r-00000
 sleep 5
 
-echo "🚨 Análisis por tipo de alerta:"
+echo -e "${GREEN}- Análisis por tipo de alerta:${RESET}"
 $HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_type/part-r-00000
 sleep 5
 
-echo "🌐 Análisis por tipo de alerta y comuna:"
+echo -e "${GREEN}- Análisis por tipo de alerta y comuna:${RESET}"
 $HADOOP_HOME/bin/hdfs dfs -cat /user/hadoop/analysis_by_type_city/part-r-00000
 sleep 5
+
 
 echo "📥 Descargando resultados a ./data local..."
 

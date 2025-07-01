@@ -1,13 +1,13 @@
 # traffic-generator/Dockerfile
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 WORKDIR /app
 
-COPY trafficGenerator.py .
+COPY ../ /app
 
+ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Agrega requests aquí
-RUN pip install pymongo numpy requests
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["python", "trafficGenerator.py"]
+CMD ["python", "traffic-generator/trafficGenerator.py"]
